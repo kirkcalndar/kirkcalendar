@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kirkův Kalendář</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap');
+
+:root {
+  --gold:#c9a84c; --gold-l:#e8c97a; --gold-d:#7a6030;
+  --deep:#080503; --parch:#130e07; --ink:#f5ecd4; --ink-d:#a8976e;
+  --red:#8b1a1a; --pur:#6e3fa3; --pur-l:#bb86fc; --grn:#27ae60;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Crimson Pro',Georgia,serif; background:var(--deep); color:var(--ink); min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 10% 0%,  rgba(201,168,76,.09) 0%,transparent 55%),
+    radial-gradient(ellipse 60% 50% at 90% 100%,rgba(110,63,163,.07) 0%,transparent 55%);
+}
+
+/* HEADER */
+header { text-align:center; padding:2.2rem 2rem 1.3rem; border-bottom:1px solid var(--gold-d); }
+.hs { font-style:italic; font-size:.78rem; color:var(--ink-d); letter-spacing:.28em; text-transform:uppercase; margin-bottom:.45rem; }
+h1  { font-family:'Cinzel Decorative',serif; font-size:clamp(1.4rem,4vw,2.8rem); color:var(--gold); text-shadow:0 0 50px rgba(201,168,76,.5); margin-bottom:.35rem; }
+.hs2 { font-size:.76rem; color:var(--ink-d); }
+.hs2 b { color:var(--gold-l); }
+#banner { margin-top:.75rem; display:inline-block; border:1px solid var(--gold-d); padding:.32rem 1.3rem; font-size:.82rem; color:var(--gold-l); background:rgba(201,168,76,.06); font-style:italic; }
+
+/* TABS */
+.tabs { display:flex; justify-content:center; border-bottom:1px solid var(--gold-d); background:rgba(0,0,0,.25); }
+.tab  { font-family:'Cinzel Decorative',serif; font-size:.6rem; letter-spacing:.1em; padding:.8rem 1.7rem; cursor:pointer; color:var(--ink-d); border:none; background:none; border-bottom:2px solid transparent; transition:all .2s; }
+.tab:hover { color:var(--gold); }
+.tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+/* VIEWS */
+.view { display:none; } .view.active { display:block; }
+
+/* CONTROLS */
+.controls { display:flex; align-items:center; justify-content:center; gap:1.1rem; padding:1rem 1.5rem; flex-wrap:wrap; border-bottom:1px solid rgba(201,168,76,.1); background:rgba(201,168,76,.02); }
+.nbtn { background:none; border:1px solid var(--gold-d); color:var(--gold); font-family:'Cinzel Decorative',serif; font-size:.56rem; padding:.4rem .95rem; cursor:pointer; letter-spacing:.07em; transition:all .2s; clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%); }
+.nbtn:hover { background:rgba(201,168,76,.1); border-color:var(--gold); }
+.yd { text-align:center; min-width:165px; }
+.yak  { font-family:'Cinzel Decorative',serif; font-size:1.55rem; color:var(--gold); line-height:1; }
+.ygr  { font-size:.65rem; color:var(--ink-d); margin-top:.12rem; }
+.msel { display:flex; align-items:center; gap:.55rem; }
+.mnv  { background:none; border:1px solid var(--gold-d); color:var(--gold); width:1.65rem; height:1.65rem; cursor:pointer; font-size:.8rem; transition:all .2s; }
+.mnv:hover { background:rgba(201,168,76,.15); border-color:var(--gold); }
+.mttl { font-family:'Cinzel Decorative',serif; font-size:.78rem; color:var(--gold-l); min-width:245px; text-align:center; }
+.mmeta { display:block; font-size:.58rem; color:var(--ink-d); font-family:'Crimson Pro',serif; margin-top:.1rem; }
+#spill { font-size:.7rem; padding:.25rem .85rem; border:1px solid transparent; font-style:italic; display:inline-block; transition:all .3s; }
+
+/* LEGEND */
+.leg  { display:flex; justify-content:center; gap:1.3rem; flex-wrap:wrap; padding:.5rem 2rem; font-size:.66rem; color:var(--ink-d); background:rgba(201,168,76,.02); border-bottom:1px solid rgba(201,168,76,.07); }
+.li   { display:flex; align-items:center; gap:.28rem; }
+.ld   { width:8px; height:8px; border-radius:50%; }
+.ld-n { background:rgba(201,168,76,.12); border:1px solid var(--gold-d); }
+.ld-w { background:rgba(139,26,26,.35);  border:1px solid var(--red); }
+.ld-x { background:rgba(110,63,163,.35); border:1px solid var(--pur); }
+.ld-t { background:rgba(39,174,96,.35);  border:1px solid var(--grn); }
+
+/* GRID */
+main { max-width:1300px; margin:0 auto; padding:1.3rem 1.4rem 3rem; }
+#cw  { border:1px solid var(--gold-d); box-shadow:0 0 70px rgba(201,168,76,.04); overflow-x:auto; }
+#cg  { display:grid; gap:2px; min-width:1000px; }
+
+.dh  { background:rgba(201,168,76,.07); border-bottom:1px solid rgba(201,168,76,.18); padding:.5rem .1rem; text-align:center; font-family:'Cinzel Decorative',serif; font-size:.4rem; color:var(--gold); letter-spacing:.03em; }
+.dh.w { color:#d9534f; background:rgba(139,26,26,.08); }
+.dh.x { color:var(--pur-l); background:rgba(110,63,163,.08); }
+
+.dc  { background:var(--parch); min-height:70px; padding:.3rem .35rem; border:1px solid rgba(201,168,76,.04); position:relative; transition:background .12s; }
+.dc:hover { background:rgba(201,168,76,.05); }
+.dc.empty { background:rgba(0,0,0,.5); opacity:.28; pointer-events:none; }
+.dc.w  { background:rgba(139,26,26,.06); border-color:rgba(139,26,26,.1); }
+.dc.x  { background:rgba(110,63,163,.06); border-color:rgba(110,63,163,.1); }
+.dc.t  { background:rgba(0,160,100,.1) !important; border-color:rgba(39,174,96,.5) !important; box-shadow:inset 0 0 14px rgba(39,174,96,.09); }
+.dn    { font-size:.9rem; line-height:1; font-weight:300; }
+.dc.w .dn { color:#e07878; }
+.dc.x .dn { color:var(--pur-l); }
+.dc.t .dn { color:#2ecc71; font-weight:600; }
+.dg    { font-size:.5rem; color:var(--ink-d); opacity:.5; margin-top:.1rem; }
+.dtag  { position:absolute; bottom:.2rem; left:.22rem; font-size:.5rem; color:#2ecc71; font-style:italic; }
+
+/* SEASON STRIP */
+.ss    { margin:1.2rem 0 0; border:1px solid rgba(201,168,76,.12); padding:.85rem 1.2rem; background:rgba(201,168,76,.025); display:flex; align-items:flex-start; gap:1.8rem; flex-wrap:wrap; }
+.ssb   { flex:1; min-width:120px; }
+.ssl   { font-family:'Cinzel Decorative',serif; font-size:.52rem; color:var(--ink-d); letter-spacing:.1em; margin-bottom:.22rem; }
+.ssv   { font-size:.9rem; }
+.ssd   { font-size:.72rem; color:var(--ink-d); font-style:italic; margin-top:.1rem; }
+
+/* MAP VIEW */
+#mv    { padding:1.6rem 1.8rem 3rem; max-width:1300px; margin:0 auto; }
+.mh    { font-family:'Cinzel Decorative',serif; font-size:1.05rem; color:var(--gold); text-align:center; margin-bottom:.22rem; }
+.msh   { text-align:center; font-size:.75rem; color:var(--ink-d); font-style:italic; margin-bottom:1.5rem; }
+.sleg  { display:flex; flex-wrap:wrap; gap:.35rem; justify-content:center; margin-bottom:1.4rem; }
+.slegi { display:flex; align-items:center; gap:.3rem; font-size:.65rem; color:var(--ink-d); padding:.16rem .55rem; border:1px solid rgba(255,255,255,.07); }
+.slegd { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+#cband { display:grid; gap:3px; margin-bottom:3px; }
+.cbc   { height:5px; }
+#mg    { display:grid; gap:3px; }
+.mc    { border:1px solid rgba(201,168,76,.13); background:rgba(255,255,255,.02); padding:.55rem .7rem; cursor:pointer; transition:all .18s; position:relative; overflow:hidden; }
+.mc:hover { border-color:var(--gold); transform:translateY(-1px); box-shadow:0 4px 16px rgba(0,0,0,.35); }
+.mc.now  { border-color:rgba(39,174,96,.55) !important; box-shadow:0 0 14px rgba(39,174,96,.12); }
+.mc.skip { opacity:.38; border-style:dashed; cursor:default; }
+.mc.skip:hover { transform:none; box-shadow:none; border-color:rgba(201,168,76,.13); }
+.mcn  { font-family:'Cinzel Decorative',serif; font-size:.46rem; color:var(--ink-d); }
+.mcm  { font-size:.75rem; color:var(--ink); line-height:1.2; margin:.15rem 0; }
+.mcd  { font-size:.58rem; color:var(--ink-d); }
+.mcs  { font-size:.56rem; font-style:italic; margin-top:.2rem; opacity:.85; }
+.mck  { font-size:.52rem; color:#888; font-style:italic; margin-top:.18rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hs">Oficíální Chronologie Dle Kirka</div>
+  <h1>Kirkův Kalendář</h1>
+  <div class="hs2">Kirk nastoupil: <b>10. září 2025 n.l.</b> — Bod nulté epochy</div>
+  <div id="banner">…</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="sw('cv',this)">📅 Kalendář měsíce</button>
+  <button class="tab"        onclick="sw('mv',this)">🗺 Mapa roku</button>
+</div>
+
+<div class="controls">
+    <button class="nbtn" onclick="cy(-1)">◀ PŘEDCHOZÍ ROK</button>
+    <div class="yd">
+      <div class="yak" id="yak"></div>
+      <div class="ygr" id="ygr"></div>
+    </div>
+    <button class="nbtn" onclick="cy(1)">NÁSLEDUJÍCÍ ROK ▶</button>
+    <div class="msel">
+      <button class="mnv" onclick="cm(-1)">◀</button>
+      <div class="mttl"><span id="mn"></span><span class="mmeta" id="mm"></span></div>
+      <button class="mnv" onclick="cm(1)">▶</button>
+    </div>
+    <div id="spill"></div>
+  </div>
+  
+<div id="cv" class="view active">
+  
+  <div class="leg">
+    <div class="li"><div class="ld ld-n"></div> Normální (Po–Pá)</div>
+    <div class="li"><div class="ld ld-w"></div> Víkend (So, Ne)</div>
+    <div class="li"><div class="ld ld-x"></div> Extra (Ženěle–Anti-den)</div>
+    <div class="li"><div class="ld ld-t"></div> Dnes</div>
+  </div>
+  <main>
+    <div id="cw"><div id="cg"></div></div>
+    <div class="ss" id="ss"></div>
+  </main>
+</div>
+
+<div id="mv" class="view">
+  <div class="mh" id="mh"></div>
+  <div class="msh" id="msh"></div>
+  <div class="sleg" id="sleg"></div>
+  <div id="cband"></div>
+  <div id="mg"></div>
+</div>
+
+<script>
+// ══ DATA ══════════════════════════════════════════════
+
+const EPOCH = new Date(Date.UTC(2025,8,10));
+
+// All 13 weekdays — ALL months use all 13
+const WK = [
+  {n:"Pondělí", s:"Po", t:"n"},
+  {n:"Úterý",   s:"Út", t:"n"},
+  {n:"Středa",  s:"St", t:"n"},
+  {n:"Čtvrtek", s:"Čt", t:"n"},
+  {n:"Pátek",   s:"Pá", t:"n"},
+  {n:"Sobota",  s:"So", t:"w"},
+  {n:"Neděle",  s:"Ne", t:"w"},
+  {n:"Ženěle",  s:"Že", t:"x"},
+  {n:"Kurdele", s:"Ku", t:"x"},
+  {n:"Devětsil",s:"Dv", t:"x"},
+  {n:"Osmiden", s:"Os", t:"x"},
+  {n:"Quasiden",s:"Qu", t:"x"},
+  {n:"Anti-den",s:"An", t:"x"},
+];
+
+const SEA = [
+  {n:"Jaro",              e:"🌸",c:"#6daf6d",m:[1,2,3],       d:"Klasické jaro, kvetení a nové začátky."},
+  {n:"Léto",              e:"☀️", c:"#d4a017",m:[4,5,6],       d:"Horké dny, bezstarostnost a slunce."},
+  {n:"Podzim",            e:"🍂",c:"#c0602a",m:[7,8,9],       d:"Padající listí, mlhy a sklizeň."},
+  {n:"Zima",              e:"❄️", c:"#6ab4d8",m:[10,11,12],    d:"Mráz, sníh a ticho."},
+  {n:"Klima",             e:"🌀",c:"#4da8a8",m:[13,14],       d:"Přechodné neurčité počasí."},
+  {n:"Podledí",           e:"🧊",c:"#2e6fa3",m:[15,16],       d:"Pod ledem — temná a klidná fáze."},
+  {n:"Sandstrop",         e:"🏜️", c:"#b8860b",m:[17,18],       d:"Suché a prachové období větrů."},
+  {n:"Tornadoledoggedon", e:"🌪️", c:"#7b4ea0",m:[19,20],       d:"Chaos živlů — tornáda a ledové bouře."},
+  {n:"The End of Jaro",   e:"🥀",c:"#8b5e83",m:[21,22],       d:"Poslední vzdech jara."},
+  {n:"Jankynránknśténś",  e:"🌈",c:"#e07b54",m:[23,24],       d:"Nepřeložitelné barevné přechodné období."},
+  {n:"Inu",               e:"🐕",c:"#a07040",m:[25,26],       d:"Rok psa — věrné a klidné období."},
+  {n:"Judgement Day",     e:"⚖️", c:"#8b1a1a",m:[27,28],       d:"Období účtů, rozhodnutí a nevyhnutelnosti."},
+  {n:"Rok páva",          e:"🦚",c:"#2d7d46",m:[29,30],       d:"Okázalost, krása a přemíra. (Měsíc 29 jen každé 3 roky!)"},
+  {n:"Revival",           e:"✨",c:"#c9a84c",m:[31,32,33,34], d:"Závěrečné zmrtvýchvstání před novým rokem."},
+];
+
+function seaFor(mnum) { return SEA.find(s=>s.m.includes(mnum))||null; }
+
+// All 34 months (base)
+const MB = [
+  {num:1,  n:"Leden",                     d:30, note:""},
+  {num:2,  n:"Únor",                      d:28, note:""},
+  {num:3,  n:"Březen",                    d:31, note:""},
+  {num:4,  n:"Duben",                     d:30, note:""},
+  {num:5,  n:"Květen",                    d:31, note:""},
+  {num:6,  n:"Červen",                    d:30, note:""},
+  {num:7,  n:"Červenec",                  d:31, note:""},
+  {num:8,  n:"Srpen",                     d:31, note:""},
+  {num:9,  n:"Září",                      d:30, note:""},
+  {num:10, n:"Október",                   d:31, note:""},
+  {num:11, n:"Listopad",                  d:30, note:""},
+  {num:12, n:"Prosinec",                  d:31, note:""},
+  {num:13, n:"Quecember",                 d:13, note:"Mimořádný měsíc"},
+  {num:14, n:"Nový Úhor",                 d:21,  note:"Měsíc nových začátků"},
+  {num:15, n:"Podzemí",                   d:15,  note:"Temný měsíc"},
+  {num:16, n:"February v2.0",             d:30, note:"Opravený únor"},
+  {num:17, n:"Alparágo",                  d:41, note:"Alpský měsíc"},
+  {num:18, n:"Uli",                       d:31,  note:"Krátký měsíc"},
+  {num:19, n:"Jubilium",                  d:18,  note:"Slavnostní měsíc"},
+  {num:20, n:"Evil Apríl",                d:30, note:"Zlý bratr dubna"},
+  {num:21, n:"Rozsvěcující Srpek",        d:50, note:"Měsíc světla"},
+  {num:22, n:"Lupin",                     d:10, note:"Vlčí měsíc"},
+  {num:23, n:"Quadercember",              d:31,  note:"Čtyřdenní měsíc"},
+  {num:24, n:"Quadruple Integrál",        d:4,  note:"Matematický měsíc"},
+  {num:25, n:"Urenec",                    d:10,  note:"Uranový měsíc"},
+  {num:26, n:"Kantonágský Leden",         d:30, note:"Exotický leden"},
+  {num:27, n:"Bartholember",              d:5, note:"Bartolomějský"},
+  {num:28, n:"Prejtobraní",               d:26, note:"Přechodový měsíc"},
+  {num:29, n:"Sečuánský Rok",             d:365, note:"⚠ Pouze každé 3 roky!"},
+  {num:30, n:"Israelský Únor",            d:20, note:"Přestupný únor"},
+  {num:31, n:"Jánin",                     d:12, note:"Jánin měsíc"},
+  {num:32, n:"Láskyplný měsíc (Turdler)",d:33, note:"Romantický"},
+  {num:33, n:"Mravenec",                  d:72,  note:"Pracovitý měsíc"},
+  {num:34, n:"Zember & Ember",            d:2,  note:"Poslední dvojměsíc"},
+];
+
+// Sečuánský (num 29) only when kirkYear mod 3 === 0
+function hasSek(ky) { return ((ky%3)+3)%3===0; }
+function mthsForYear(ky) { return MB.filter(m=>m.num!==29||hasSek(ky)); }
+function dInYear(ky) { return mthsForYear(ky).reduce((s,m)=>s+m.d,0); }
+
+// ══ DATE MATH ═════════════════════════════════════════
+
+function utcDay(d) { return Math.floor(d.getTime()/86400000); }
+const EPOCH_D = utcDay(EPOCH);
+function delta(date) { return utcDay(new Date(Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate())))-EPOCH_D; }
+
+
+function kirkFromDelta(dt) {
+  if (dt>=0) {
+    let rem=dt, ky=0;
+    for(;;){ const dy=dInYear(ky); if(rem<dy)break; rem-=dy; ky++; }
+    const ms=mthsForYear(ky); let mi=0,acc=0;
+    for(let i=0;i<ms.length;i++){if(rem<acc+ms[i].d){mi=i;break;}acc+=ms[i].d;}
+    return {ky,mi,day:rem-acc+1};
+  } else {
+    let rem=-dt-1, ky=-1;
+    for(;;){ const dy=dInYear(ky); if(rem<dy)break; rem-=dy; ky--; }
+    const ms=mthsForYear(ky); const tot=ms.reduce((s,m)=>s+m.d,0);
+    let diy=tot-1-rem, mi=0, acc=0;
+    for(let i=0;i<ms.length;i++){if(diy<acc+ms[i].d){mi=i;break;}acc+=ms[i].d;}
+    return {ky,mi,day:diy-acc+1};
+  }
+}
+
+function deltaForKirk(ky,mi,day) {
+  let t=0;
+  if(ky>=0){for(let y=0;y<ky;y++)t+=dInYear(y);}
+  else{for(let y=-1;y>=ky;y--)t-=dInYear(y);}
+  const ms=mthsForYear(ky);
+  for(let i=0;i<mi;i++)t+=ms[i].d;
+  return t+day-1;
+}
+
+function gregFor(ky,mi,day) {
+  const d=new Date(EPOCH); d.setUTCDate(d.getUTCDate()+deltaForKirk(ky,mi,day)); return d;
+}
+function fmt(d){return `${d.getUTCDate()}.${d.getUTCMonth()+1}.${d.getUTCFullYear()}`;}
+function era(ky){return ky>0?`${ky} AK`:ky<0?`${Math.abs(ky)} PK`:"Rok Kirka (0)";}
+
+const TODAY=new Date();
+const TK=kirkFromDelta(delta(TODAY));
+
+// ══ STATE ═════════════════════════════════════════════
+let CY=TK.ky, CMI=TK.mi;
+
+// ══ TABS ══════════════════════════════════════════════
+function sw(id,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='mv')renderMap();
+}
+
+// ══ CALENDAR ══════════════════════════════════════════
+function cy(d){CY+=d;renderCal();}
+function cm(d){
+  const ms=mthsForYear(CY);
+  CMI+=d;
+  if(CMI<0){CY--;CMI=mthsForYear(CY).length-1;}
+  if(CMI>=ms.length){CY++;CMI=0;}
+  renderCal();
+}
+
+function renderCal(){
+  const ms=mthsForYear(CY);
+  if(CMI>=ms.length)CMI=ms.length-1;
+  const m=ms[CMI];
+  const sea=seaFor(m.num);
+
+  document.getElementById('yak').textContent=era(CY);
+  const gs=gregFor(CY,CMI,1), ge=gregFor(CY,CMI,m.d);
+  document.getElementById('ygr').textContent=`${fmt(gs)} – ${fmt(ge)}`;
+  document.getElementById('mn').textContent=m.n;
+  document.getElementById('mm').textContent=`Měsíc ${m.num}/34 · ${m.d} dní · 13-denní týden${m.note?' · '+m.note:''}`;
+
+  const sp=document.getElementById('spill');
+  if(sea){sp.textContent=`${sea.e} ${sea.n}`;sp.style.borderColor=sea.c;sp.style.color=sea.c;sp.style.background=sea.c+'18';}
+  else sp.textContent='';
+
+  const isT=d=>TK.ky===CY&&TK.mi===CMI&&TK.day===d;
+
+  // Cumulative day offset for start of this month (for consistent offset)
+  let dayOff=0;
+  for(let i=0;i<CMI;i++)dayOff+=ms[i].d;
+  const off=dayOff%13;
+
+  const g=document.getElementById('cg');
+  g.innerHTML='';
+  g.style.gridTemplateColumns='repeat(13,1fr)';
+
+  WK.forEach(wd=>{
+    const h=document.createElement('div');
+    h.className='dh'+(wd.t==='w'?' w':wd.t==='x'?' x':'');
+    h.innerHTML=`<span style="font-size:.56rem">${wd.s}</span><br><span style="font-size:.36rem;opacity:.55">${wd.n}</span>`;
+    g.appendChild(h);
+  });
+
+  for(let i=0;i<off;i++){const e=document.createElement('div');e.className='dc empty';g.appendChild(e);}
+  for(let d=1;d<=m.d;d++){
+    const pos=(off+d-1)%13, wd=WK[pos];
+    const c=document.createElement('div');
+    let cls='dc';
+    if(wd.t==='w')cls+=' w';
+    if(wd.t==='x')cls+=' x';
+    if(isT(d))    cls+=' t';
+    c.className=cls;
+    const gd=gregFor(CY,CMI,d);
+    c.innerHTML=`<div class="dn">${d}</div><div class="dg">${fmt(gd)}</div>${isT(d)?'<div class="dtag">◀ DNES</div>':''}`;
+    g.appendChild(c);
+  }
+
+  // Season strip
+  const ss=document.getElementById('ss');
+  if(sea){
+    const mr=sea.m.map(n=>MB.find(x=>x.num===n)?.n||n).join(' · ');
+    const td=sea.m.reduce((s,n)=>s+(MB.find(x=>x.num===n)?.d||0),0);
+    ss.innerHTML=`
+      <div class="ssb"><div class="ssl">AKTUÁLNÍ OBDOBÍ</div><div class="ssv" style="color:${sea.c}">${sea.e} ${sea.n}</div><div class="ssd">${sea.d}</div></div>
+      <div class="ssb"><div class="ssl">MĚSÍCE OBDOBÍ</div><div class="ssv" style="font-size:.8rem">${mr}</div></div>
+      <div class="ssb"><div class="ssl">DÉLKA OBDOBÍ</div><div class="ssv" style="font-size:.8rem">${sea.m.length} měsíc${sea.m.length>1?'e/ů':''}</div><div class="ssd">~${td} dní</div></div>`;
+    ss.style.borderColor=sea.c+'44';
+  } else ss.innerHTML='';
+}
+
+// ══ MAP ═══════════════════════════════════════════════
+function renderMap(){
+  const ms=mthsForYear(CY);
+  const sek=hasSek(CY);
+  document.getElementById('mh').textContent=`Mapa roku ${era(CY)}`;
+  document.getElementById('msh').textContent=`${ms.length} měsíců · ${dInYear(CY)} dní · 14 ročních období${sek?' · 🌶 Rok Sečuánského':' · (Sečuánský přeskočen)'}`;
+
+  // Season legend
+  document.getElementById('sleg').innerHTML=SEA.map(s=>
+    `<div class="slegi"><div class="slegd" style="background:${s.c}"></div>${s.e} ${s.n}</div>`
+  ).join('');
+
+  const COLS=6;
+  document.getElementById('cband').style.gridTemplateColumns=`repeat(${COLS},1fr)`;
+  document.getElementById('mg').style.gridTemplateColumns=`repeat(${COLS},1fr)`;
+
+  const band=document.getElementById('cband'), mg=document.getElementById('mg');
+  band.innerHTML=''; mg.innerHTML='';
+
+  MB.forEach(mb=>{
+    const sea=seaFor(mb.num);
+    const skip=mb.num===29&&!sek;
+    const mi=ms.findIndex(x=>x.num===mb.num);
+    const isNow=!skip&&TK.ky===CY&&TK.mi===mi;
+
+    // Band
+    const bc=document.createElement('div');
+    bc.className='cbc';
+    bc.style.background=sea?sea.c:'#444';
+    bc.style.opacity=skip?'.18':'.6';
+    bc.title=sea?sea.n:'';
+    band.appendChild(bc);
+
+    // Card
+    const card=document.createElement('div');
+    card.className='mc'+(isNow?' now':'')+(skip?' skip':'');
+    card.innerHTML=`
+      <div style="position:absolute;left:0;top:0;bottom:0;width:3px;background:${sea?sea.c:'#555'};opacity:${skip?.25:.65}"></div>
+      <div class="mcn">${mb.num<10?'0'+mb.num:mb.num} / 34</div>
+      <div class="mcm">${mb.n}${isNow?' <span style="color:#2ecc71;font-size:.58rem">◀ DNES</span>':''}</div>
+      <div class="mcd">${skip?'— přeskočen':mb.d+' dní'}</div>
+      ${sea?`<div class="mcs" style="color:${sea.c}">${sea.e} ${sea.n}</div>`:''}
+      ${skip?'<div class="mck">každé 3 roky</div>':''}
+    `;
+    if(!skip&&mi>=0){card.onclick=()=>{CMI=mi;sw('cv',document.querySelectorAll('.tab')[0]);renderCal();};}
+    mg.appendChild(card);
+  });
+}
+
+// ══ BANNER ════════════════════════════════════════════
+function renderBanner(){
+  const ms=mthsForYear(TK.ky), m=ms[TK.mi];
+  const sea=m?seaFor(m.num):null;
+  document.getElementById('banner').innerHTML=
+    `Dnes: <b>${TK.day}. ${m?m.n:'?'}</b> · ${era(TK.ky)}`+
+    (sea?` · ${sea.e} ${sea.n}`:'')+
+    ` &nbsp;|&nbsp; Greg: ${fmt(TODAY)}`;
+}
+
+renderBanner();
+renderCal();
+</script>
+</body>
+</html>
